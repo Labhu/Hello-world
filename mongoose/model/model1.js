@@ -12,7 +12,7 @@ var Student =mongoose.model('Student', {
     },
     address : {
         type : String,
-        required : true,
+        required : true, 
         minlength : 3,
         trim : true
     },
@@ -27,6 +27,10 @@ var Student =mongoose.model('Student', {
     age : {
         type: Number,
         required : true,
+    },
+    _creator: {
+        type : mongoose.Schema.Types.ObjectId ,
+        required : true
     }
 
 });

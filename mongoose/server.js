@@ -3,9 +3,14 @@ var express = require('express');
 var bodyParser = require ('body-parser');
 
 var {mongodb} =require('./../mongodb/mongodb-connect');
+var{User} = require('./../mongoose/model/create-model');
+//var {private} = require('./../mongodb/private-model');
+const {authenticate} = require('./../middleware/authenticate');
+
+
  
 //var{Student} = require('./model/model1');
-var{User} = require('./model/create-model');
+
 
 var {ObjectID} = require('mongodb'); 
 
@@ -15,7 +20,7 @@ var {ObjectID} = require('mongodb');
 
 app.use(bodyParser.json());
 
-//save data...........
+//save data in Student...........
 
 app.post('/stu', (req, res) => {
 //     console.log(req.body);
@@ -34,6 +39,63 @@ app.post('/stu', (req, res) => {
 }); 
 
 
+//save data in user...........
+
+app.post('/data', (req, res) => {
+    //     console.log(req.body);
+    // });
+        var user = new User( {
+          email : req.body.email,
+          password  : req.body.password
+        
+         });
+    
+        user.save().then ((doc) => {
+            res.send(doc);
+        }, (err) => {
+        res.status(400).send(err);
+    });
+    }); 
+
+
+// save data in private model...
+app.post('/private', authenticate, (req, res) => {
+    //     console.log(req.body);
+    // });
+        var user = new User( {
+          email : req.body.email,
+          password  : req.body.password,
+          _creator : req.user._id
+        
+         });
+    
+        user.save().then ((doc) => {
+            res.send(doc);
+        }, (err) => {
+        res.status(400).send(err);
+    });
+    }); 
+
+    app.post('/sut',  authenticate,  (req, res) => {
+        //     console.log(req.body);
+        // });
+            var ss = new Student( {
+              name : req.body.name,
+              address : req.body.address,
+              branch : req.body.branch,
+              age : req.body.age ,
+              _creator : req.ss._id
+            
+             });
+        
+            ss.save().then ((doc) => {
+                res.send(doc);
+            }, (err) => {
+            res.status(400).send(err);
+        });
+        }); 
+
+
 //get data...........
 app.get('/stu' , (req,res) => {
     
@@ -43,7 +105,27 @@ Student.find().then ((data) => {
          (e) =>{ res.status(400).send(e) 
     })
 });
-     
+
+//get data in to private model....
+
+app.get('/private' , authenticate , (req,res) => {
+    
+    User.find({_creator : req.user._id} ).then ((data) => {
+                res.send({data});
+            },
+             (e) =>{ res.status(400).send(e) 
+        })
+    });   
+    
+    
+    app.get('/stu' , authenticate , (req,res) => {
+    
+        Student.find({ _creator : req.user._id} ).then ((data) => {
+                    res.send({data});
+                },
+                 (e) =>{ res.status(400).send(e) 
+            })
+        });
         
 
 //get find by ID
@@ -148,6 +230,42 @@ app.get ('/i/am' ,(req, res) => {
 
 });
 
+
+//login..
+ app.post('/login' ,(req, res) => {
+     var body= _.pick(req.body, ['email' , 'password']);
+     res.send(body);  
+ })
+
+ //Logging in post.....
+ app.post('/post/login' ,(req, res) => {
+
+    var body= _.pick(req.body, ['email' , 'password']);
+    
+    User.findByCredentials(body.email, body.password).then ((user) => {
+ console.log(user);
+        res.send(body);
+        
+
+    }).catch( (e) => {
+ 
+        res.status(400).send();
+
+    });
+})
+
+// log out...
+
+app.delete('/log/out' , authenticate, (req,res) => {
+    req.user.removeToken(req.token).then ( () => {
+        res.status(200).send();
+
+    }).catch( (e) => {
+        console.log(e);
+        res.status(400).send();
+    })
+     
+})
 
 
 
